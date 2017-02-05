@@ -291,7 +291,34 @@ def zatwierdzenie(request):
 
         #dodaj wszystkie wizyty tak jak bozia przykazala
         #tu trzeba dodac elementy do bazy danych
-        rejestracja=Rejestracja(nrRejestracj)
+        konto=Osoba.objects.get(imie="imie", nazwisko="nazwisko")
+        pacjent=Pacjent.objects.get(osobaKontoNumerKonta=konto)
+        priorytet=True
+        if request.POST.get("priorytet",""):
+            priorytet=True
+        else:
+            priorytet=False
+        #priorytet=request.POST.get("priorytet","")
+        rejestracja=Rejestracja(pacjentOsobaKontoNumerKonta=pacjent,priorytet=priorytet )
+        #do rejestracji tworzymy wiele miejsc i terminów
+        rejestracja.save()
+
+
+        print (wizyty)
+        for wizyta in wizyty:
+              #pobieranie fizjoterapeuty
+            print("wizyta: ",wizyta)
+            fizjoOsoba=Osoba.objects.get(imie=wizyta.fizjoterapeuta.split()[0],nazwisko=wizyta.fizjoterapeuta.split()[1])
+            fizjoFizko=Fizjoterapeuta.objects.get(osobaKontoNumerKonta=fizjoOsoba)
+            mit=MiejsceITermin(     miasto=wizyta.miasto,
+                                    ulica=wizyta.ulica,
+                                    numerBudynkuMieszkania=wizyta.dom,
+                                    data=wizyta.dzien,
+                                    odGodziny=wizyta.godziny,
+                                    doGodziny=wizyta.godziny+1,
+                                    osoba2NerRejestracji=rejestracja,
+                                    preferowanyFizjoterapeuta=fizjoFizko)
+            mit.save()
 
 
         return render(request,"rejestracje/main.html")
