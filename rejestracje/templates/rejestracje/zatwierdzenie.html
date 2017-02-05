@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Przeglądanie oferty</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/oferta.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/zatwierdzenie.css' %}" />
+</head>
+<body>
+    <div id="menu">
+        <h1>
+            <img class="icon" src="{% static 'Pics/icon.jpg' %}" alt="Tu będzie ikona ale nie chcialo mi sie jej szukac" />
+            Witamy  w naszym mobilnym gabinecie!
+            <img src="{% static 'Pics/icon.jpg' %}" alt="Tu będzie ikona ale nie chcialo mi sie jej szukac" class="icon" />
+        </h1>
+        <nav>
+            <ul>
+                <li><a href="rozpocznijPrzegladanie" class="current">Przeglądaj ofertę</a></li>
+                <li><a href="historia.html">Historia rejestracji</a></li>
+                <li><a href="main">O nas</a></li>
+                <li><a href="Kontakt.html">Kontakt</a></li>
+                <li><a href="logowanie.html">Wyloguj</a></li>
+            </ul>
+        </nav>
+    </div>
+    <form id="rejestracjaWizyty" method="post" action="zatwierdzenie">
+        {% csrf_token %}
+        <h1>Rejestracja</h1>
+        <table>
+            <thead>
+                <tr>
+                    <td>Num</td>
+                    <td>Data wizyty</td>
+                    <td>Godzina</td>
+                    <td>Fizjoterapeuta</td>
+                    <td>Adres</td>
+                </tr>
+            </thead>
+            <tbody>
+            {% for wizyta in wizyty|dictsort:"dzien" %}
+
+                <tr>
+                    <td>1</td>
+                    <td>{{wizyta.dzien}}</td>
+                    <td>{{wizyta.godziny}}:00 - {{ wizyta.godziny|add:1}}:00</td>
+                    <td>{{wizyta.fizjoterapeuta}}</td>
+                    <td>{{wizyta.miasto}} ul.{{wizyta.ulica}} {{wizyta.dom}}</td>
+                </tr>
+                </tr>
+
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <p>Wybrany zabieg:          <label id="terapia">{{wybranaUsluga}}</label></p>
+
+        <p>Priorytet:          <label id="priorytet"> {% if priorytet %} Wysoki {% else %} Niski {% endif %} </label> </p>
+        <p>Cena: {{cena}} </p>
+        <p>Wybierz forme zaplaty:         <select name="rodzajZaplaty">
+                                              <option value="Gotówka">Gotówka</option>
+                                              <option value="Przelew">Przelew</option>
+                                            </select>
+        </p>
+<!--Pamiętać o tym zeby rpzekazac elementy pobrane z porpedniej strony-->
+        <input type="hidden" name="wybranaUsluga" value={{wybranaUsluga}} />
+        <input type="hidden" name="priorytet" value={{priorytet}} />
+        <input type="hidden" name="cena" value={{cena}} />
+
+            <input class="button" name="wybor" type="submit" value="zatwierdz" />
+            <input class="button" name="wybor" type="submit" value="anuluj" />
+
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Przeglądanie oferty</title>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/oferta.css' %}" />
+
+</head>
+<body>
+    <div id="menu">
+
+
+        <h1>
+            <img class="icon" src="{% static 'Pics/icon.jpg' %}" alt="Tu będzie ikona ale nie chcialo mi sie jej szukac" />
+            Witamy  w naszym mobilnym gabinecie!
+            <img src="{% static 'Pics/icon.jpg' %}" alt="Tu będzie ikona ale nie chcialo mi sie jej szukac" class="icon" />
+        </h1>
+
+
+        <nav>
+            <ul>
+                <li><a href="rozpocznijPrzegladanie" class="current">Przeglądaj ofertę</a></li>
+                <li><a href="historia.html">Historia rejestracji</a></li>
+                <li><a href="main">O nas</a></li>
+                <li><a href="Kontakt.html">Kontakt</a></li>
+                <li><a href="logowanie.html">Wyloguj</a></li>
+            </ul>
+        </nav>
+    </div>
+
+        <div>
+            <form action="przegladanie" method="get">
+            <label>Wybierz date wizyty:<br /><input name="data"  {% if data  %} value={{data}} {%endif%} type="date" /> <!-- value="pickedDate"  -->
+               </label>
+             <input type="submit" value="Pobierz godziny"/>
+                {{komunikat}}
+
+            </form>
+        </div>
+
+
+
+        {% if data and not komunikat %}
+
+            <form action="rejestracja" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="data" value={{data}}>
+                 <!--<input type="hidden" name="more_days" value=True>-->
+                <div >
+                <p>
+                    Zaznacz pasujące terminy
+                    <div class="table">
+                        {% if brakGodzin %} Nie wybrałeś żadnych godzin. {%endif%}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <td>Godziny</td>
+                                    <td>Wybór</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    {% for key,value in godziny %}
+                                    <tr>
+                                         <td>{{value}} </td>
+                                         <td><input type="checkbox" name=godz,{{key}} value="" {% if key in wybraneGodziny %} checked {% endif %} /></td>
+
+
+
+                                    </tr>
+                                    {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </p>
+                </div>
+                <input type="hidden" name="godziny"  value= {{godziny}} />
+
+
+                <div class="adres">
+
+                <p>Wybierz preferowanego fizjoterapeutę:<br />
+                    {% if nieMaTegoFizjoterapeuty %}Preferowany fizjoterapeuta jest niedostępny w wybranych godzinach. Czy chcesz kontynuować?
+                    <input type="hidden" name="wybor" {% if poprzedniWybor %} value={{poprzedniWybor}} {% endif %}>
+                    <input type="submit" name="bezFizjoterapeutyWybor" value="tak" />
+                    <input type="submit" name="bezFizjoterapeutyWybor"  value="nie" />
+                    {%endif%}
+                    <select name="preferowany_fizjoterapeuta" title="preferowany_fizjoterapeuta"  >
+                        {%for fizjoterapeuta in fizjoterapeuci%}
+                         <option {% if fizjoterapeuta.imie in preferowany and fizjoterapeuta.nazwisko in preferowany %} selected {% endif %} name= value= {{fizjoterapeuta}} >  {{fizjoterapeuta.imie}} {{fizjoterapeuta.nazwisko}}  </option>/>
+                        {%endfor%}
+                    </select>
+
+                </p>
+
+                <p>
+                    <input type="text" name= "ulica" placeholder="ulica" id="ulica" {% if ulica %} value={{ulica}} {% endif %}/>
+                    <input type="text" name= "dom"  placeholder="dom" id="dom" {% if dom %} value={{dom}} {% endif %}/>
+                    <input type="text"  name= "miasto" placeholder="miasto" id="miasto" {% if miasto %} value={{miasto}} {% endif %} />
+                    {% if adresNiepoprawny %}Niepoprawny adres, popraw go.{%endif%}
+                </p>
+
+
+
+                </div>
+                </p>
+
+                <div class="buttons">
+                    <input type="submit" name="wybor" value="zatwierdz" />
+                    <input type="submit" name="wybor"  value="kolejny" />
+                    <input type="submit" name="wybor" value="anuluj" />
+                </div>
+
+
+
+            </form>
+
+        {% endif %}
+</body>
+</html>

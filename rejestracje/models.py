@@ -1,5 +1,7 @@
+#-*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+#from __builtin__ import unicode
 from django.core.validators import RegexValidator
 from django.db import models
 from decimal import Decimal
@@ -12,7 +14,7 @@ class Konto(models.Model):
     email = models.EmailField(max_length=255,unique=True)
     numerKonta=models.AutoField(primary_key=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return "Login: "+self.loginy
 
 
@@ -25,7 +27,7 @@ class Osoba(models.Model):
     numerBudynkuMieszkania=models.CharField(max_length=10)
     kontoNumerKonta=models.ForeignKey(Konto, primary_key=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return "Imie: "+self.imie + ", Nazwisko: "+self.nazwisko
 
 
@@ -34,28 +36,30 @@ class Pacjent(models.Model):#usunac osobaKontoLoginy=models. z visuala
     rabat=models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('00.00'))#glupi nullable - moze byc po prostu 0
     osobaKontoNumerKonta=models.ForeignKey(Osoba, primary_key=True)
 
-    def __str__(self):
-        return "Konto pacjenta: "+self.osobaKontoNumerKonta
+  #  def __str__(self):
+     #   return "Konto pacjenta: "+str(self.osobaKontoNumerKonta)
 
-
+    def __unicode__(self):
+        return str(self.osobaKontoNumerKonta)
 
 
 class Fizjoterapeuta(models.Model):
     pensja=models.DecimalField(max_digits=7, decimal_places=2)
     osobaKontoNumerKonta=models.ForeignKey(Osoba, primary_key=True)
 
-    def __str__(self):
-        return "Konto fizjoterapeuty: "+self.osobaKontoNumerKonta
+
+    def __unicode__(self):
+        return "Konto fizjoterapeuty: "+str(self.osobaKontoNumerKonta)
 
 
 class Rejestracja(models.Model):
     nrRejestracji=models.AutoField(primary_key=True)
     pacjentOsobaKontoNumerKonta=models.ForeignKey(Pacjent)
     priorytet=models.BooleanField(default=False)
-    preferowanyFizjoterapeuta=models.ForeignKey(Fizjoterapeuta, blank=True)
 
-    def __str__(self):
-        return "Nr: "+self.nrRejestracji+" Pacjent: "+self.pacjentOsobaKontoNumerKonta
+
+    def __unicode__(self):
+        return "Nr: "+str(self.nrRejestracji)+" Pacjent: "+str(self.pacjentOsobaKontoNumerKonta)
 
 
 
@@ -63,7 +67,7 @@ class UslugiTyp(models.Model):
     typ=models.CharField(primary_key=True, max_length=40)
     cena=models.DecimalField(max_digits=5, decimal_places=2, blank=True)# czy aby na pewno?
 
-    def __str__(self):
+    def __unicode__(self):
         return "Typ: "+self.typ
 
 
@@ -78,8 +82,8 @@ class Wizyta(models.Model):
     rejestracjaNrRejestracji=models.ForeignKey(Rejestracja)
     fizjoterapeuta=models.ForeignKey(Fizjoterapeuta ,blank=True)
 
-    def __str__(self):
-        return "Wizyta: "+self.nrWizyty
+    def __unicode__(self):
+        return "Wizyta: "+str(self.nrWizyty)
 
 
 
@@ -91,9 +95,10 @@ class MiejsceITermin(models.Model):
     odGodziny=models.IntegerField(max_length=2)
     doGodziny=models.IntegerField(max_length=2)
     osoba2NerRejestracji=models.ForeignKey(Rejestracja, primary_key=True)
-
+    preferowanyFizjoterapeuta=models.ForeignKey(Fizjoterapeuta, blank=True)
+    
     def __str__(self):
-        return "Miejsce spotkania: "+self.miasto
+        return "Miejsce spotkania: "+str(self.miasto)
 
 
 
@@ -111,7 +116,7 @@ class GodzinyPrzyjec(models.Model):
     doGodziny=models.IntegerField(max_length=2)
 
     def __str__(self):
-        return "Godziny przyjec: "+self.index+"  data: "+self.data+"  na godzine:"+self.odGodziny
+        return "Godziny przyjec: "+str(self.index)+"  data: "+str(self.data)+"  na godzine:"+str(self.odGodziny)
 
 
 
