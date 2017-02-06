@@ -9,6 +9,12 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/oferta.css' %}" />
 </head>
 <body>
+    <script>
+        {% if message %}
+            alert('{{message}}')
+        {% endif %}
+    </script>
+
     <div id="menu">
         <h1>
             <img class="icon" src="{% static 'Pics/icon.jpg' %}" alt="Tu będzie ikona ale nie chcialo mi sie jej szukac" />

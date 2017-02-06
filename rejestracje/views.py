@@ -9,7 +9,7 @@ from django.utils.encoding import force_text
 from django.core.serializers.json import DjangoJSONEncoder
 import re
 import pickle
-
+from django.contrib import messages
 
 def main_page(request):
     return render(request, 'rejestracje/main.html', {})  #tutaj renderujemy okreslony html z naszymi danymi
@@ -61,7 +61,9 @@ def rejestracja(request):
     dzien=request.POST.get("data","")
 
     if(s=="anuluj"):
-        return render(request, 'rejestracje/main.html')
+        resetujPrzypisaniaWizyt()
+        return render(request,"rejestracje/oferta.html",{"message":u"Przerwano rejestrację."})
+       # return render(request, 'rejestracje/main.html')
 
     dict['data']=dzien
     pobrana_data=[int(i) for i in dzien.split('-')]
@@ -223,7 +225,9 @@ def szczegoly(request):
     dict['cena']=cena
 
     if wybor=="anuluj":
-        return render(request, 'rejestracje/main.html')
+        resetujPrzypisaniaWizyt()
+        return render(request,"rejestracje/oferta.html",{"message":u"Przerwano rejestrację."})
+        #return render(request, 'rejestracje/main.html')
     elif wybor=="zatwierdz":
 
         file=open("imie_nazwisko",'rb')
@@ -258,12 +262,16 @@ def utworzGodzinySet(wizyty):
 
     return tabela
 
-
+def resetujPrzypisaniaWizyt():
+    file=open("imie_nazwisko", 'wb')
+    pickle.dump([],file)
+    file.close()
 
 def zatwierdzenie(request):
     sterowanie=request.POST.get("wybor")
     if sterowanie=="anuluj":
-        return render(request,"rejestracje/main.html")
+        pass
+        #return render(request,"rejestracje/main.html")
     else:
         file=open("imie_nazwisko",'rb')
         wizyty=pickle.load(file)
@@ -303,13 +311,19 @@ def zatwierdzenie(request):
                                     preferowanyFizjoterapeuta=fizjoFizko)
             mit.save()
 
-
-        return render(request,"rejestracje/main.html")
+    resetujPrzypisaniaWizyt()
+    return render(request,"rejestracje/oferta.html",{"message":u"Dodano poprawnie rejestrację"})
 
 
 
 def aktywne(request):
     dict={}
+    wizyty=generowanieAktywnychWizyt()
+    dict["wizyty"]=wizyty
+    print(wizyty)
+    return render(request, "rejestracje/historia.html",dict)
+
+def generowanieAktywnychWizyt():
     osoba=Osoba.objects.get(imie="imie",nazwisko='nazwisko')
     pacjent=Pacjent.objects.get(osobaKontoNumerKonta=osoba)
     rejestracje=Rejestracja.objects.filter(pacjentOsobaKontoNumerKonta=pacjent)
@@ -320,11 +334,7 @@ def aktywne(request):
 
         terminPierwszy=MiejsceITermin.objects.filter(osoba2NerRejestracji=rejestracja).filter(data__gt=timezone.now()).order_by('date').order_by('odGodziny').first()
         wizyty.append(terminPierwszy)
-    dict["wizyty"]=wizyty
-    print(wizyty)
-    return render(request, "rejestracje/historia.html",dict)
-
-
+    return wizyty
 
 
 def anulowanie(request,pk):
@@ -340,19 +350,26 @@ def anulowanie(request,pk):
 
 def anulowanieWizyty(request):
     wybor=request.POST.get("wybor","")
-    print("wybor",wybor)
+   # print("wybor",wybor)
     pk=request.POST.get("pk","")
-    print("pk",pk)
+   # print("pk",pk)
 
     if wybor=="Edytuj" :
         pass
     elif wybor=="Usun pojedyncze godziny" :
         pass
     elif wybor==u"Usun całą rejestrację" :
-        print("weszło w usuwanie rejestracji")
+       # print("weszło w usuwanie rejestracji")
         rejestracja=Rejestracja.objects.get(nrRejestracji=pk)
 
         rejestracja.delete()
+        wizyty=generowanieAktywnychWizyt()
+        dict2={}
+        dict2["wizyty"]=wizyty
+        dict2["message"]="Usunięto rejestrację"
+        messages.info(request, u"Usunięto rejestrację")
+        return render(request, "rejestracje/historia.html",dict2)
+
     elif wybor=="Cofnij":
         print ("wesło")
         wyj=aktywne(request)
@@ -439,28 +456,3 @@ class MyEncoder(DjangoJSONEncoder):
             return force_text(obj)
         return super(MyEncoder, self).default(obj)
 
-
-#class WizytaSerializer(serializers.Serializer):
- #   dzien= serializers.IntegerField()
-  #  godziny= serializers.ListField(
-   #     child=serializers.IntegerField(min_value=0, max_value=23)
-    #    )
- #   fizjoterapeuta=serializers.CharField()
-  #  miasto=serializers.CharField()
-   # ulica=serializers.CharField()
-    #dom=serializers.IntegerField()
-
-    #def restore_objects(self,attrs,instance=None):
-     #   if instance is not None:
-      #      instance.dzien=attrs.get("dzien", instance.dzien)
-       #     instance.godziny=attrs.get("godziny", instance.godziny)
-        #    instance.fizjoterapeuta=attrs.get("fizjoterapeuta",instance.fizjoterapeuta)
-         #   instance.miasto=attrs.get("miasto",instance.miasto)
-          #  instance.ulica=attrs.get("ulica", instance.ulica)
-           # instance.dom=attrs.get("dom", instance.dom)
-        #return Wizyta(**attrs)
-
-
-##@register.filter
-#def sort_lower(lst, key_name):
-   ## return sorted(lst, key=lambda item: getattr(item, key_name).lower())
