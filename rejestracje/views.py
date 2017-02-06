@@ -351,6 +351,7 @@ def anulowanieWizyty(request):
     elif wybor==u"Usun całą rejestrację" :
         print("weszło w usuwanie rejestracji")
         rejestracja=Rejestracja.objects.get(nrRejestracji=pk)
+
         rejestracja.delete()
     elif wybor=="Cofnij":
         print ("wesło")
