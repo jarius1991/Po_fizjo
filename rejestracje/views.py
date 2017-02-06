@@ -25,14 +25,6 @@ def przegladanie(request):
     pobrana_data=''
     dict={}
     komunikat=''
- #   for get in request.GET:
-  #      print(get)
-#  #  print("piklujemy?",request.GET.get("more_days",""))
- #   if request.GET.get("more_days",""):
-     #       file=open("imie_nazwisko", 'wb')
-     #       pickle.dump([],file)
-      #      file.close()
-      #      print("utworzylismy nowy pickle!")
 
     try:
         pobrana_data=request.GET['data']
@@ -42,7 +34,6 @@ def przegladanie(request):
 
 
     if(pobrana_data):
-       # dict["more_days"]=True
         pobrana_data=[int(i) for i in pobrana_data.split('-')]
         a=datetime.datetime(pobrana_data[0],pobrana_data[1],pobrana_data[2],0,0,0,1)
         b=timezone.make_naive(timezone.now())
@@ -57,11 +48,6 @@ def przegladanie(request):
             dict["fizjoterapeuci"]=potencjalni_fizjoterapeuci
             godziny=generowanieGodzin(godziny_baza)
             dict["godziny"]=godziny
-
-
-
-
-
     dict['komunikat']=komunikat
     return render(request, 'rejestracje/oferta.html',dict)
 
@@ -74,11 +60,7 @@ def rejestracja(request):
     s=request.POST.get("wybor","")
     dzien=request.POST.get("data","")
 
-    #pobrana_data=request.GET.get("data",'')
-    #print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",dzien)
-
     if(s=="anuluj"):
-        #skasuj dodane wybory -> przejdz dalej z nadzieje ze zadziala nie zapamietanie elementow
         return render(request, 'rejestracje/main.html')
 
     dict['data']=dzien
@@ -168,7 +150,7 @@ def rejestracja(request):
 
 
 
-    wizyta=Wizyta(dzien,lista_g,preferowany, miasto,ulica,dom)
+    wizyta=WizytaWpis(dzien,lista_g,preferowany, miasto,ulica,dom)
    # print("wizyta po utworzeniu"); print(wizyta.__str__())
 
     file=open("imie_nazwisko",'rb')
@@ -201,7 +183,6 @@ def rejestracja(request):
 
 def oblicz_cene(priorytet):
     doPobraniaCeny=UslugiTyp.objects.get(typ=u"Masaż")
-       # print ('doPograniaCeny',doPobraniaCeny.cena)
     cena=doPobraniaCeny.cena
     if priorytet:
         cena=cena+20
@@ -265,7 +246,7 @@ def utworzGodzinySet(wizyty):
     tabela=[]
     for wizyta in wizyty:
         for godzina in wizyta.godziny:
-            temp=Wizyta(wizyta.dzien,godzina,wizyta.fizjoterapeuta,wizyta.miasto,wizyta.ulica,wizyta.dom)#(self, dzien, godziny,fizjoterapeuta,miasto,ulica, dom):
+            temp=WizytaWpis(wizyta.dzien,godzina,wizyta.fizjoterapeuta,wizyta.miasto,wizyta.ulica,wizyta.dom)#(self, dzien, godziny,fizjoterapeuta,miasto,ulica, dom):
             dodac=True
             for elem in tabela:
                 if temp.dzien==elem.dzien and temp.godziny==elem.godziny:
@@ -304,12 +285,14 @@ def zatwierdzenie(request):
         rejestracja.save()
 
 
-        print (wizyty)
         for wizyta in wizyty:
               #pobieranie fizjoterapeuty
             print("wizyta: ",wizyta)
-            fizjoOsoba=Osoba.objects.get(imie=wizyta.fizjoterapeuta.split()[0],nazwisko=wizyta.fizjoterapeuta.split()[1])
-            fizjoFizko=Fizjoterapeuta.objects.get(osobaKontoNumerKonta=fizjoOsoba)
+            if wizyta.fizjoterapeuta:
+                fizjoOsoba=Osoba.objects.get(imie=wizyta.fizjoterapeuta.split()[0],nazwisko=wizyta.fizjoterapeuta.split()[1])
+                fizjoFizko=Fizjoterapeuta.objects.get(osobaKontoNumerKonta=fizjoOsoba)
+            else:
+                fizjoFizko=None
             mit=MiejsceITermin(     miasto=wizyta.miasto,
                                     ulica=wizyta.ulica,
                                     numerBudynkuMieszkania=wizyta.dom,
@@ -325,8 +308,56 @@ def zatwierdzenie(request):
 
 
 
+def aktywne(request):
+    dict={}
+    osoba=Osoba.objects.get(imie="imie",nazwisko='nazwisko')
+    pacjent=Pacjent.objects.get(osobaKontoNumerKonta=osoba)
+    rejestracje=Rejestracja.objects.filter(pacjentOsobaKontoNumerKonta=pacjent)
+    #jezeli rejestracja ma wizyte to trzeba z wizyty to zrobic
+    wizyty=[]
+    for rejestracja in rejestracje:
+        #jezeli rejestracja jest w wizytach
+
+        terminPierwszy=MiejsceITermin.objects.filter(osoba2NerRejestracji=rejestracja).filter(data__gt=timezone.now()).order_by('date').order_by('odGodziny').first()
+        wizyty.append(terminPierwszy)
+    dict["wizyty"]=wizyty
+    print(wizyty)
+    return render(request, "rejestracje/historia.html",dict)
 
 
+
+
+def anulowanie(request,pk):
+    print (pk)
+    wizyty=MiejsceITermin.objects.filter(osoba2NerRejestracji=pk)
+    print("wizyty: ",wizyty)
+    dict={"wizyty":wizyty  }
+    dict["pk"]=pk
+
+    return render(request, "rejestracje/anulowanie.html",dict)
+
+
+
+def anulowanieWizyty(request):
+    wybor=request.POST.get("wybor","")
+    print("wybor",wybor)
+    pk=request.POST.get("pk","")
+    print("pk",pk)
+
+    if wybor=="Edytuj" :
+        pass
+    elif wybor=="Usun pojedyncze godziny" :
+        pass
+    elif wybor==u"Usun całą rejestrację" :
+        print("weszło w usuwanie rejestracji")
+        rejestracja=Rejestracja.objects.get(nrRejestracji=pk)
+        rejestracja.delete()
+    elif wybor=="Cofnij":
+        print ("wesło")
+        wyj=aktywne(request)
+        return wyj
+
+    return render(request, "rejestracje/main.html")
 
 
 
@@ -389,7 +420,7 @@ def przegladanieData1(request,value):
 
 
 
-class Wizyta():
+class WizytaWpis():
     def __init__(self, dzien, godziny,fizjoterapeuta,miasto,ulica, dom):
         self.dzien=dzien
         self.godziny=godziny

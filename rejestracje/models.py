@@ -29,7 +29,7 @@ class Osoba(models.Model):
     kontoNumerKonta=models.ForeignKey(Konto, primary_key=True)
 
     def __unicode__(self):
-        return u"Imie: "+self.imie + u", Nazwisko: "+self.nazwisko
+        return self.imie +u" "+ self.nazwisko
 
 
 
@@ -50,7 +50,7 @@ class Fizjoterapeuta(models.Model):
 
 
     def __unicode__(self):
-        return u"Konto fizjoterapeuty: "+ unicode(self.osobaKontoNumerKonta)
+        return  unicode(self.osobaKontoNumerKonta)
 
 
 class Rejestracja(models.Model):
@@ -89,7 +89,7 @@ class Wizyta(models.Model):
 
 
 class MiejsceITermin(models.Model):
-    #id=models.AutoField(primary_key=True)
+   # id=models.AutoField(primary_key=True)
     miasto=models.CharField(max_length=40)
     ulica=models.CharField(max_length=40)
     numerBudynkuMieszkania=models.CharField(max_length=10)
@@ -100,7 +100,7 @@ class MiejsceITermin(models.Model):
     preferowanyFizjoterapeuta=models.ForeignKey(Fizjoterapeuta, blank=True,null=True)
 
     def __unicode__(self):
-        return "Miejsce spotkania: "+self.miasto+ " godzina:"+self.odGodziny
+        return u"Miejsce spotkania: "+unicode(self.miasto)+ u" godzina:"+unicode(self.odGodziny)+u" data: "+unicode(self.data)+u" nrrejestracji: "+unicode(self.osoba2NerRejestracji.nrRejestracji)
 
 
 

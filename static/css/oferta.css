@@ -24,19 +24,18 @@ form div{
     width:45%;
     position:relative;
     text-align:center;
-    position:absolute;
     padding-top:100px;
     margin:auto;
 }
 
 form div.adres {
+float:right;
+margin-right:5%;
     padding-top:150px;
-    left:50%;
 }
 form div.buttons {
     line-height:50px;
        width:100%;
-    top:600px;
     margin:auto;
 }
 

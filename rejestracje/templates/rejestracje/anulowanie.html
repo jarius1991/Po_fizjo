@@ -22,7 +22,7 @@
                 <li>
                     <a class="current">Historia rejestracji</a>
                     <ul>
-                        <li><a href="aktywne">Aktywne rejestracje</a></li>
+                        <li><a href="/aktywne">Aktywne rejestracje</a></li>
                         <li><a href="historiaP.html">Pełna historia</a></li>
                     </ul>
                 </li>
@@ -32,17 +32,20 @@
             </ul>
         </nav>
     </div>
-     <form id="anulowanieWizyty" method="post" action="anulowanieWizyty">
+     <form id="anulowanieWizyty" method="post" action="/anulowanieWizyty">
         {% csrf_token %}
+         <input type="hidden" name="pk" value={{pk}}>
         <h1>Aktywne rejestracje</h1>
-         <p>Wybierz pozycję w celu wyświetlenia szczegółów</p>
+         <p>Wybierz pozycję w celu etycji godziny</p>
         <table>
             <thead>
                 <tr>
                     <td>Num</td>
-                    <td>Najbliższy zarejestrowany termin/Data wizyty</td>
+                    <td>Data wizyty</td>
+                    <td>Godzina</td>
                     <td>Fizjoterapeuta</td>
                     <td>Adres</td>
+                    <td>Do usunięcia</td>
                 </tr>
             </thead>
 
@@ -51,18 +54,28 @@
 
                 <tr>
 
-                    <td> <a href="{% url 'anulowanie' pk=wizyta.osoba2NerRejestracji.nrRejestracji %}" >{{ forloop.counter}}</a>  </td>
-                    <td> <a href="{% url 'anulowanie' pk=wizyta.osoba2NerRejestracji.nrRejestracji %}" > {{wizyta.data}}</a> </td>
-                    <td> <a href="{% url 'anulowanie' pk=wizyta.osoba2NerRejestracji.nrRejestracji %}" >{%if wizyta.preferowanyFizjoterapeuta %} {{wizyta.preferowanyFizjoterapeuta}}   {%endif%} </a> </td>
-                    <td> <a href="{% url 'anulowanie' pk=wizyta.osoba2NerRejestracji.nrRejestracji %}" >{{wizyta.miasto}} ul.{{wizyta.ulica}} {{wizyta.numerBudynkuMieszkania}} </a> </td>
+                    <td> {{ forloop.counter}}  </td>
+                    <td> {{wizyta.data}}</td>
+                    <td> {{wizyta.odGodziny}}:00 - {{wizyta.doGodziny}}:00 </td>
+                    <td> {%if wizyta.preferowanyFizjoterapeuta %} {{wizyta.preferowanyFizjoterapeuta}}   {%endif%}  </td>
+                    <td> {{wizyta.miasto}} ul.{{wizyta.ulica}} {{wizyta.numerBudynkuMieszkania}}  </td>
 
+                    <td> <input type="checkbox" name="priorytet" value={{wizyta.pk}} /> </td>
                 </tr>
 
 
             {% endfor %}
             </tbody>
-        </table>
 
+
+
+        </table>
+            <input type="submit" name="wybor" value="Edytuj" >
+            <input type="submit" name="wybor" value="Usun pojedyncze godziny" >
+            <input type="submit" name="wybor" value="Usun całą rejestrację" >
+            <input type="submit" name="wybor" value="Cofnij" >
+
+     </form>
     <div>
 
 
