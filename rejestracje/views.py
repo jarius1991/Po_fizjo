@@ -1,12 +1,8 @@
 #-*- coding: utf-8 -*-
 from django.shortcuts import render
 from .models import *
-# Create your views here.
 from django.utils import timezone
 import datetime
-from django.core import serializers
-from django.utils.encoding import force_text
-from django.core.serializers.json import DjangoJSONEncoder
 import re
 import pickle
 from django.contrib import messages
@@ -18,7 +14,6 @@ def rozpocznijPrzegladanie(request):
     file=open("imie_nazwisko", 'wb')
     pickle.dump([],file)
     file.close()
-    print("utworzylismy nowy pickle!")
     return render(request, 'rejestracje/oferta.html',{})
 
 def przegladanie(request):
@@ -106,15 +101,7 @@ def rejestracja(request):
 
     #sprawdzenie czy miasto ulica i dom są dobre
     adresNiepoprawny=""
-
-    miastoWzorzec=re.compile(u"^[A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+([ ][A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+){0,1}$")
-    czyMiastoPasuje=bool(miastoWzorzec.match(miasto))
-
-    ulicaWzorzec=re.compile(u"^[A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+([ |-][A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+){0,1}$")
-    czyUlicaPasuje=bool(ulicaWzorzec.match(ulica))
-
-    domWzorzec=re.compile(u"^[0-9]+[a-z]{0,1}$")
-    czyDomPasuje=bool(domWzorzec.match(dom))
+    czyMiastoPasuje,czyUlicaPasuje,czyDomPasuje=poprawny_Adres(miasto, ulica,dom)
 
     if not czyMiastoPasuje:
         dict["miasto"]=''
@@ -183,6 +170,19 @@ def rejestracja(request):
         return render(request,'rejestracje/szczegolyRejestracji.html',dict2)
        # szczegoly(request)
 
+
+def poprawny_Adres(miasto, ulica,dom):
+    miastoWzorzec=re.compile(u"^[A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+([ ][A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+){0,1}$")
+    czyMiastoPasuje=bool(miastoWzorzec.match(miasto))
+
+    ulicaWzorzec=re.compile(u"^[A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+([ |-][A-ZŁŻÓĘN]{1}[a-złżóęńśźć]+){0,1}$")
+    czyUlicaPasuje=bool(ulicaWzorzec.match(ulica))
+
+    domWzorzec=re.compile(u"^[0-9]+[a-z]{0,1}$")
+    czyDomPasuje=bool(domWzorzec.match(dom))
+    return [czyMiastoPasuje,czyUlicaPasuje,czyDomPasuje]
+
+
 def oblicz_cene(priorytet):
     doPobraniaCeny=UslugiTyp.objects.get(typ=u"Masaż")
     cena=doPobraniaCeny.cena
@@ -234,15 +234,11 @@ def szczegoly(request):
         wizyty=pickle.load(file)
         file.close()
         for wizyta in wizyty:
-           # for godzina in wizyta.godziny:
-                wizyta.godziny.sort()
-
-        #alternatywna mozliwosc utowrzenia wizyt na kazda godzine
+            wizyta.godziny.sort()
         wizyty=utworzGodzinySet(wizyty)
-
         dict['wizyty']=wizyty
-
         return render(request, "rejestracje/zatwierdzenie.html",dict)
+
     #jeszcze trzeba dodac elementy tabeli
     return render(request,'rejestracje/szczegolyRejestracji.html',dict)
 
@@ -320,18 +316,14 @@ def aktywne(request):
     dict={}
     wizyty=generowanieAktywnychWizyt()
     dict["wizyty"]=wizyty
-    print(wizyty)
     return render(request, "rejestracje/historia.html",dict)
 
 def generowanieAktywnychWizyt():
     osoba=Osoba.objects.get(imie="imie",nazwisko='nazwisko')
     pacjent=Pacjent.objects.get(osobaKontoNumerKonta=osoba)
     rejestracje=Rejestracja.objects.filter(pacjentOsobaKontoNumerKonta=pacjent)
-    #jezeli rejestracja ma wizyte to trzeba z wizyty to zrobic
     wizyty=[]
     for rejestracja in rejestracje:
-        #jezeli rejestracja jest w wizytach
-
         terminPierwszy=MiejsceITermin.objects.filter(osoba2NerRejestracji=rejestracja).filter(data__gt=timezone.now()).order_by('date').order_by('odGodziny').first()
         wizyty.append(terminPierwszy)
     return wizyty
@@ -343,7 +335,6 @@ def anulowanie(request,pk):
     print("wizyty: ",wizyty)
     dict={"wizyty":wizyty  }
     dict["pk"]=pk
-
     return render(request, "rejestracje/anulowanie.html",dict)
 
 
@@ -402,11 +393,13 @@ def pobierz_godziny(request):
     request.POST.get("",)
 
 def generowanieGodzin(godziny):
+        #print("godziny", godziny)
         list={}
         for i in godziny:
 
             for j in range(i.odGodziny,i.doGodziny):
                 list[j]= str(j)+":00 - " +str(j+1)+":00 "
+       # print("wyjscie z godzin",sorted(list.items()))
         return sorted(list.items())
 
 
@@ -449,10 +442,4 @@ class WizytaWpis():
 
     def __unicode__(self):
         return u'%s %s %s %s %s %s '%(self.dzien, self.godziny, self.fizjoterapeuta, self.miasto, self.ulica, self.dom)
-
-class MyEncoder(DjangoJSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Wizyta):
-            return force_text(obj)
-        return super(MyEncoder, self).default(obj)
 
